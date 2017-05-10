@@ -10,12 +10,12 @@ import org.apache.storm.redis.bolt.AbstractRedisBolt;
 import org.apache.storm.redis.common.config.JedisPoolConfig;
 
 import redis.clients.jedis.JedisCommands;
-import utils.Utils;
-
 
 import java.util.*;
 
+import static utils.Utils.getCosDistance;
 import static utils.Utils.json2Map;
+import static utils.Utils.waitForMillis;
 
 /**
  * Created by jinha on 2017/3/29.
@@ -29,54 +29,50 @@ public class Classify extends AbstractRedisBolt{
 
 
     public void execute(Tuple tuple) {
+        int count = 0;
         JedisCommands jedisCommands = null;
         try {
             jedisCommands = getInstance();
             jedisCommands.incrBy("classify" ,1);
-
-
-//            Map<String ,String> valList = jedisCommands.hgetAll("cluster");
-
             Map<String,Double> tf =  json2Map(tuple.getStringByField("tf"));
-//
-//
-//            int len = valList.size();
-//            boolean flag = true;
-//            for (int i = 0; i < len; i++) {
-//                double dis = this.getCosDistance(json2Map(valList.get("" + i)),tf);
-//                if(dis>0.3){
-//                    flag = false;
-//                    this.collector.emit(new Values(tuple.getStringByField("sentence"),tuple.getStringByField("tf"),""+i));
-//                }
-//
-//            }
-//            if(flag){
-//                jedisCommands.hset("cluster",""+jedisCommands.hlen("cluster"),tuple.getStringByField("tf"));
-//                jedisCommands.lpush(""+jedisCommands.hlen("cluster"),tuple.getStringByField("tf"));
-//            }
-            boolean flag = true;
+            double min = 0;
+            long minClass = -1;
+
+            String classList = tuple.getStringByField("classList").replaceAll("[\\[\\]\\s]","");
+            if(!(classList==null||classList.equals(""))){
+                String[] tempCList = classList.split(",");
+                for (String s:tempCList){
+                    count++;
+                    double dis = getCosDistance(tf,json2Map(jedisCommands.lindex("cluster",Long.parseLong(s))));
+                    if(dis>0.6&&dis>min)
+                        minClass = Long.parseLong(s);
+                }
+            }
+
             Map<String,Double> temp;
-            int time = 400;
-            for(long i = 0 ;;i++){
+            int time = 100;
+            for(long i = tuple.getLongByField("limit") ;;i++){
                 temp = json2Map(jedisCommands.lindex("cluster",i));
                 if(temp == null){
-                    if(time == 50)
+                    if(time == 25)
                         break;
-                    else Utils.waitForMillis(time/=2);
+                    else waitForMillis(time/=2);
                 }
                 else{
-                    double dis = this.getCosDistance(temp,tf);
-                    if(dis>0.6){
-                        flag = false;
-                        this.collector.emit(new Values(tuple.getStringByField("sentence"),tuple.getStringByField("tf"),i));
-                    }
+                    count++;
+                    double dis = getCosDistance(temp,tf);
+                    if(dis>0.6&&dis>min)
+                        minClass = i;
                 }
             }
-
-            if(flag){
-                long n = jedisCommands.rpush("cluster",tuple.getStringByField("tf"));
-                jedisCommands.lpush("" + (n-1),tuple.getStringByField("sentence"));
+            if(minClass == -1){
+                minClass = jedisCommands.rpush("cluster",tuple.getStringByField("tf"))-1;
+                jedisCommands.hset("clusterNum",""+minClass,"1");
             }
+
+            jedisCommands.incrBy("max",count);
+            this.collector.emit(new Values(tuple.getIntegerByField("Id"),tuple.getStringByField("tf"),minClass));
+
         } finally {
             if (jedisCommands != null) {
                 returnInstance(jedisCommands);
@@ -86,30 +82,7 @@ public class Classify extends AbstractRedisBolt{
     }
 
 
-    private Double getCosDistance(Map<String, Double> aMap, Map<String, Double> bMap){
-        Set<String> set = new HashSet<String>();
-        set.addAll(aMap.keySet());
-        set.addAll(bMap.keySet());
-        double re = 0;
-        for (String s:set) {
-            double a = aMap.containsKey(s)?aMap.get(s):0.0;
-            double b = bMap.containsKey(s)?bMap.get(s):0.0;
-            re+=a*b;
-        }
-        double aPlus = 0;
-        for(double d:aMap.values()){
-            aPlus+=d*d;
-        }
-
-        double bPlus = 0;
-        for(double d:bMap.values()){
-            bPlus+=d*d;
-        }
-
-        return re/Math.sqrt(aPlus)/Math.sqrt(bPlus);
-    }
-
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
-        declarer.declare(new Fields("sentence","tf","class"));
+        declarer.declare(new Fields("Id","tf","classId"));
     }
 }

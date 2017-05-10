@@ -33,8 +33,9 @@ public class Tfidf extends AbstractRedisBolt {
                     tempMap.put(w,1.0/word.size());
                 else tempMap.put(w,(1+tempMap.get(w)*word.size())/word.size());
             }
-            jedisCommands.hset("tflist",tuple.getStringByField("sentence"), JSONObject.fromObject(tempMap).toString());
-            this.collector.emit(new Values(tuple.getStringByField("sentence"), JSONObject.fromObject(tempMap).toString()));
+            String s = JSONObject.fromObject(tempMap).toString();
+            jedisCommands.hset("tflist",tuple.getIntegerByField("Id").toString(), s);
+            this.collector.emit(new Values(tuple.getIntegerByField("Id"), s));
         } finally {
             if (jedisCommands != null) {
                 returnInstance(jedisCommands);
@@ -44,6 +45,6 @@ public class Tfidf extends AbstractRedisBolt {
     }
 
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
-        declarer.declare(new Fields("sentence","tf"));
+        declarer.declare(new Fields("Id","tf"));
     }
 }

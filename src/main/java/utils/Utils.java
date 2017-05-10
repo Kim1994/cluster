@@ -1,10 +1,11 @@
 package utils;
 
+import com.mysql.jdbc.Connection;
 import net.sf.json.JSONObject;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.*;
 
 public class Utils {
 
@@ -34,5 +35,40 @@ public class Utils {
             re.put(key,value);
         }
         return re;
+    }
+    public static Double getCosDistance(Map<String, Double> aMap, Map<String, Double> bMap){
+        Set<String> set = new HashSet<String>();
+        set.addAll(aMap.keySet());
+        set.addAll(bMap.keySet());
+        double re = 0;
+        for (String s:set) {
+            double a = aMap.containsKey(s)?aMap.get(s):0.0;
+            double b = bMap.containsKey(s)?bMap.get(s):0.0;
+            re+=a*b;
+        }
+        double aPlus = 0;
+        for(double d:aMap.values()){
+            aPlus+=d*d;
+        }
+
+        double bPlus = 0;
+        for(double d:bMap.values()){
+            bPlus+=d*d;
+        }
+
+        return re/Math.sqrt(aPlus)/Math.sqrt(bPlus);
+    }
+
+    public static Connection getConn(){
+        String driver = "com.mysql.jdbc.Driver";
+        String url = "jdbc:mysql://localhost:3306/test";
+        String username = "root";
+        String password = "han.jin";
+        try {
+            return  (Connection) DriverManager.getConnection(url, username, password);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }

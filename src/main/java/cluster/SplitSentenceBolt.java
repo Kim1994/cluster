@@ -27,11 +27,11 @@ public class SplitSentenceBolt extends BaseRichBolt {
         String sentence = tuple.getStringByField("sentence").replaceAll("[^,.，。\\u4e00-\\u9fa5]", "");
         if(!(sentence == null ||sentence.equals(""))) {
             List<Word> words = WordSegmenter.seg(sentence);
-            this.collector.emit(new Values(tuple.getStringByField("sentence"), words.toString().replace("[", "").replace("]", "").replace(" ", "")));
+            this.collector.emit(new Values(tuple.getIntegerByField("Id"), words.toString().replaceAll("[\\[\\]\\s]","")));
         }
     }
 
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
-        declarer.declare(new Fields("sentence","words"));
+        declarer.declare(new Fields("Id","words"));
     }
 }
