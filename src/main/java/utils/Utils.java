@@ -39,11 +39,12 @@ public class Utils {
     public static Double getCosDistance(Map<String, Double> aMap, Map<String, Double> bMap){
         Set<String> set = new HashSet<String>();
         set.addAll(aMap.keySet());
-        set.addAll(bMap.keySet());
+        set.retainAll(bMap.keySet());
         double re = 0;
         for (String s:set) {
-            double a = aMap.containsKey(s)?aMap.get(s):0.0;
-            double b = bMap.containsKey(s)?bMap.get(s):0.0;
+            double a = aMap.get(s);
+//            double a = aMap.containsKey(s)?aMap.get(s):0.0;
+            double b = bMap.get(s);
             re+=a*b;
         }
         double aPlus = 0;
@@ -61,9 +62,9 @@ public class Utils {
 
     public static Connection getConn(){
         String driver = "com.mysql.jdbc.Driver";
-        String url = "jdbc:mysql://localhost:3306/test";
+        String url = "jdbc:mysql://192.168.0.103:3306/test";
         String username = "root";
-        String password = "han.jin";
+        String password = "123456";
         try {
             return  (Connection) DriverManager.getConnection(url, username, password);
         } catch (SQLException e) {

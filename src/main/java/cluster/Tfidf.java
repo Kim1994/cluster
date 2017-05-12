@@ -26,6 +26,7 @@ public class Tfidf extends AbstractRedisBolt {
         JedisCommands jedisCommands = null;
         try {
             jedisCommands = getInstance();
+            jedisCommands.incrBy("tf",1);
             List<String> word = Arrays.asList(tuple.getStringByField("words").split(","));
             Map<String,Double> tempMap  = new HashMap<String, Double>();
             for (String w:word) {
@@ -33,9 +34,8 @@ public class Tfidf extends AbstractRedisBolt {
                     tempMap.put(w,1.0/word.size());
                 else tempMap.put(w,(1+tempMap.get(w)*word.size())/word.size());
             }
-            String s = JSONObject.fromObject(tempMap).toString();
-            jedisCommands.hset("tflist",tuple.getIntegerByField("Id").toString(), s);
-            this.collector.emit(new Values(tuple.getIntegerByField("Id"), s));
+            jedisCommands.hset("tflist",tuple.getIntegerByField("Id").toString(), tempMap.toString());
+            this.collector.emit(new Values(tuple.getIntegerByField("Id"), tempMap));
         } finally {
             if (jedisCommands != null) {
                 returnInstance(jedisCommands);

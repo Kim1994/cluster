@@ -29,6 +29,8 @@
             <artifactId>word</artifactId>
             <version>1.2</version>
         </dependency>
+
+
         <dependency>
             <groupId>org.apache.storm</groupId>
             <artifactId>storm-redis</artifactId>
@@ -38,7 +40,7 @@
             <groupId>org.apache.storm</groupId>
             <artifactId>storm-core</artifactId>
             <version>0.10.0</version>
-            <!--<scope>provided</scope>-->
+            <scope>provided</scope>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/com.google.code.gson/gson -->
@@ -62,6 +64,14 @@
             <artifactId>mysql-connector-java</artifactId>
             <version>5.1.31</version>
         </dependency>
+
+        <!-- https://mvnrepository.com/artifact/com.huaban/jieba-analysis -->
+        <!--<dependency>-->
+            <!--<groupId>com.huaban</groupId>-->
+            <!--<artifactId>jieba-analysis</artifactId>-->
+            <!--<version>1.0.2</version>-->
+        <!--</dependency>-->
+
     </dependencies>
 
     <build>

@@ -9,11 +9,9 @@ import org.apache.storm.redis.common.config.JedisPoolConfig;
 import redis.clients.jedis.JedisCommands;
 
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
-import static utils.Utils.json2Map;
 
 /**
  * Created by jinha on 2017/5/11.
@@ -29,15 +27,17 @@ public class HotWord  extends AbstractRedisBolt {
             jedisCommands = getInstance();
             long limit = jedisCommands.llen("cluster");
             Set<Integer> classSet = new HashSet<Integer>();
-            Map<String,Double> tf =  json2Map(tuple.getStringByField("tf"));
+            Map<String,Double> tf =  (Map<String, Double>) tuple.getValueByField("tf");
             for(String s :tf.keySet()){
                 String csSet = jedisCommands.hget("hotWord" , s);
                 if(csSet==null||csSet.equals(""))
                     continue;
-                for(String s1:csSet.split(","))
-                    classSet.add(Integer.parseInt(s1));
+                String[] strings= csSet.split(",");
+                if(strings.length<50)
+                    for(String s1:strings)
+                        classSet.add(Integer.parseInt(s1));
             }
-            this.collector.emit(new Values(tuple.getIntegerByField("Id"),tuple.getStringByField("tf"),classSet.toString(),limit));
+            this.collector.emit(new Values(tuple.getIntegerByField("Id"),tf,classSet.toString(),limit));
 
         } finally {
             if (jedisCommands != null) {

@@ -36,8 +36,9 @@ public class SqlSpout extends BaseRichSpout {
             pstmt = (PreparedStatement)conn.prepareStatement(sql);
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
-                this.collector.emit(new Values(rs.getInt(1),rs.getString(2)));
-                Utils.waitForMillis(100);
+                if(!(rs.getString(2).equals("")||rs.getString(2)==null))
+                    this.collector.emit(new Values(rs.getInt(1),rs.getString(2)));
+                    Utils.waitForMillis(60);
             }
         } catch (SQLException e) {
             e.printStackTrace();

@@ -14,30 +14,30 @@ public class WordCountTopology {
         TopologyBuilder builder = new TopologyBuilder();
 
         JedisPoolConfig poolConfig = new JedisPoolConfig.Builder()
-                .setHost("192.168.56.101").setPort(6379).build();
+                .setHost("192.168.0.101").setPort(6379).build();
 //        RedisStoreMapper storeMapper = new Idf2Redis();
 //        RedisStoreBolt storeBolt = new RedisStoreBolt(poolConfig, storeMapper) ;
 
         builder.setSpout("Spout", new SqlSpout());
         // SentenceSpout --> SplitSentenceBolt
-        builder.setBolt("Split",new SplitSentenceBolt(),4).shuffleGrouping("Spout");
+        builder.setBolt("Split",new SplitSentenceBolt()).shuffleGrouping("Spout");
         // SplitSentenceBolt --> WordCountBolt
         builder.setBolt("Tfidf", new Tfidf(poolConfig)).shuffleGrouping("Split");
 //        builder.setBolt("Idf2Redis",  new Idf2Redis(poolConfig)).shuffleGrouping("Split");
 //        builder.setBolt("Report",new ReportBolt()).shuffleGrouping("Tfidf");
-        builder.setBolt("HotWord",new HotWord(poolConfig)).shuffleGrouping("Tfidf");
-        builder.setBolt("Classify", new Classify(poolConfig),2).shuffleGrouping("HotWord");
+        builder.setBolt("HotWord",new HotWord(poolConfig),2).shuffleGrouping("Tfidf");
+        builder.setBolt("Classify", new Classify(poolConfig),4).shuffleGrouping("HotWord");
         builder.setBolt("AddItem", new AddItem(poolConfig),2).shuffleGrouping("Classify");
-        builder.setBolt("SqlSave",new SqlSave()).shuffleGrouping("AddItem");
+//        builder.setBolt("SqlSave",new SqlSave()).shuffleGrouping("AddItem");
 
         Config config = new Config();
 //        config.setDebug(true);
 
-        LocalCluster cluster = new LocalCluster();
+//        LocalCluster cluster = new LocalCluster();
+//
+//        cluster.submitTopology("cluster", config, builder.createTopology());
 
-        cluster.submitTopology("cluster", config, builder.createTopology());
-
-//        config.setNumWorkers(8);
-//        StormSubmitter.submitTopologyWithProgressBar(args[0], config, builder.createTopology());
+        config.setNumWorkers(12);
+        StormSubmitter.submitTopologyWithProgressBar(args[0], config, builder.createTopology());
     }
 }
