@@ -30,7 +30,7 @@ public class SqlSpout extends BaseRichSpout {
     }
 
     public void nextTuple() {
-        String sql = "select articleid , article_content from article_source";
+        String sql = "select articleid , article_content from cs_article_search";
         PreparedStatement pstmt;
         try {
             pstmt = (PreparedStatement)conn.prepareStatement(sql);

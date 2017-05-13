@@ -30,7 +30,7 @@ public class SqlSave extends BaseRichBolt {
     }
 
     public void execute(Tuple tuple) {
-        String sql = "UPDATE article_source SET clusterID = "+tuple.getLongByField("classId")+" WHERE articleid = " +tuple.getIntegerByField("Id");
+        String sql = "UPDATE cs_article_search SET clusterID = "+tuple.getLongByField("classId")+" WHERE articleid = " +tuple.getIntegerByField("Id");
         PreparedStatement pstmt;
         try {
             pstmt = (PreparedStatement)conn.prepareStatement(sql);

@@ -44,7 +44,7 @@ public class Classify extends AbstractRedisBolt{
                 for (String s:tempCList){
                     count++;
                     double dis = getCosDistance(tf, JSONObject.fromObject(jedisCommands.lindex("cluster",Long.parseLong(s))));
-                    if(dis>0.6&&dis>min)
+                    if(dis>0.2&&dis>min)
                         minClass = Long.parseLong(s);
                 }
             }
@@ -65,7 +65,7 @@ public class Classify extends AbstractRedisBolt{
                 }
                 count++;
                 double dis = getCosDistance(tf,temp);
-                if(dis>0.05&&dis>min)
+                if(dis>0.2&&dis>min)
                     minClass = i;
             }
             if(minClass == -1){

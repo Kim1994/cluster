@@ -11,8 +11,9 @@ import org.apache.storm.redis.common.config.JedisPoolConfig;
 import redis.clients.jedis.JedisCommands;
 
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+
+import static utils.Utils.json2Map;
 
 
 /**
@@ -33,15 +34,19 @@ public class AddItem extends AbstractRedisBolt {
             Map<String, Double> tf = (Map<String, Double>) tuple.getValueByField("tf");
             long n = tuple.getLongByField("classId");
             if(!jedisCommands.lindex("cluster", n).equals(tf.toString())){
-                Map<String,Double> re = new HashMap<String, Double>();
-                Map<String, Double> avg = JSONObject.fromObject(jedisCommands.lindex("cluster", n));
+                Map<String, Double> avg = json2Map(jedisCommands.lindex("cluster", n));
                 int len = Integer.parseInt(jedisCommands.hget("clusterNum",""+n));
-                for (String s : tf.keySet()) {
+                Set<String> stringSet = new HashSet<String>(tf.keySet());
+                for(String s:stringSet){
                     if (avg.containsKey(s))
-                        re.put(s, ((len * avg.get(s) + tf.get(s)) / (len + 1)));
-                    else re.put(s, tf.get(s) / (len + 1));
+                        avg.put(s, ((len * avg.get(s) + tf.get(s)) / (len + 1)));
+                    else avg.put(s, tf.get(s) / (len + 1));
+                    if(avg.get(s)<1E-3) {
+                        avg.remove(s);
+                        tf.remove(s);
+                    }
                 }
-                jedisCommands.lset("cluster", n, re.toString());
+                jedisCommands.lset("cluster", n, avg.toString());
                 jedisCommands.hincrBy("clusterNum",""+n,1);
             }
 
@@ -53,8 +58,8 @@ public class AddItem extends AbstractRedisBolt {
                     else
                         jedisCommands.hset("hotWord",s,temp+","+n);
             }
-            jedisCommands.hset("pear" ,tuple.getIntegerByField("Id").toString(),""+n);
-//            this.collector.emit(new Values(tuple.getIntegerByField("Id"),n));
+//            jedisCommands.hset("pear" ,tuple.getIntegerByField("Id").toString(),""+n);
+            this.collector.emit(new Values(tuple.getIntegerByField("Id"),n));
         } finally {
             if (jedisCommands != null) {
                 returnInstance(jedisCommands);

@@ -40,6 +40,8 @@ public class Utils {
         Set<String> set = new HashSet<String>();
         set.addAll(aMap.keySet());
         set.retainAll(bMap.keySet());
+        if(set.size()<15)
+            return 0.0;
         double re = 0;
         for (String s:set) {
             double a = aMap.get(s);
@@ -62,9 +64,9 @@ public class Utils {
 
     public static Connection getConn(){
         String driver = "com.mysql.jdbc.Driver";
-        String url = "jdbc:mysql://192.168.0.103:3306/test";
+        String url = "jdbc:mysql://localhost:3306/test";
         String username = "root";
-        String password = "123456";
+        String password = "han.jin";
         try {
             return  (Connection) DriverManager.getConnection(url, username, password);
         } catch (SQLException e) {

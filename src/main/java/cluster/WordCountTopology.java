@@ -14,7 +14,7 @@ public class WordCountTopology {
         TopologyBuilder builder = new TopologyBuilder();
 
         JedisPoolConfig poolConfig = new JedisPoolConfig.Builder()
-                .setHost("192.168.0.101").setPort(6379).build();
+                .setHost("localhost").setPort(6379).build();
 //        RedisStoreMapper storeMapper = new Idf2Redis();
 //        RedisStoreBolt storeBolt = new RedisStoreBolt(poolConfig, storeMapper) ;
 
@@ -28,16 +28,16 @@ public class WordCountTopology {
         builder.setBolt("HotWord",new HotWord(poolConfig),2).shuffleGrouping("Tfidf");
         builder.setBolt("Classify", new Classify(poolConfig),4).shuffleGrouping("HotWord");
         builder.setBolt("AddItem", new AddItem(poolConfig),2).shuffleGrouping("Classify");
-//        builder.setBolt("SqlSave",new SqlSave()).shuffleGrouping("AddItem");
+        builder.setBolt("SqlSave",new SqlSave()).shuffleGrouping("AddItem");
 
         Config config = new Config();
 //        config.setDebug(true);
 
-//        LocalCluster cluster = new LocalCluster();
-//
-//        cluster.submitTopology("cluster", config, builder.createTopology());
+        LocalCluster cluster = new LocalCluster();
 
-        config.setNumWorkers(12);
-        StormSubmitter.submitTopologyWithProgressBar(args[0], config, builder.createTopology());
+        cluster.submitTopology("cluster", config, builder.createTopology());
+
+//        config.setNumWorkers(12);
+//        StormSubmitter.submitTopologyWithProgressBar(args[0], config, builder.createTopology());
     }
 }
