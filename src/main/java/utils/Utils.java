@@ -24,7 +24,7 @@ public class Utils {
     }
     public static Map<String,Double> json2Map(String s){
         if(s == null||s.equals("")){
-            return null;
+            return new HashMap<String, Double>();
         }
         Map<String,Double> re = new HashMap<String, Double>();
         JSONObject js = JSONObject.fromObject(s);
@@ -40,7 +40,7 @@ public class Utils {
         Set<String> set = new HashSet<String>();
         set.addAll(aMap.keySet());
         set.retainAll(bMap.keySet());
-        if(set.size()<15)
+        if(set.size()<10)
             return 0.0;
         double re = 0;
         for (String s:set) {

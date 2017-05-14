@@ -29,11 +29,11 @@ public class AddItem extends AbstractRedisBolt {
         JedisCommands jedisCommands = null;
         try {
             jedisCommands = getInstance();
-            jedisCommands.set("avg",""+(Integer.parseInt(jedisCommands.get("max"))/Integer.parseInt(jedisCommands.get("classify"))));
+//            jedisCommands.set("avg",""+(Integer.parseInt(jedisCommands.get("max"))/Integer.parseInt(jedisCommands.get("classify"))));
 
             Map<String, Double> tf = (Map<String, Double>) tuple.getValueByField("tf");
             long n = tuple.getLongByField("classId");
-            if(!jedisCommands.lindex("cluster", n).equals(tf.toString())){
+            if(tuple.getIntegerByField("isNew")==0){
                 Map<String, Double> avg = json2Map(jedisCommands.lindex("cluster", n));
                 int len = Integer.parseInt(jedisCommands.hget("clusterNum",""+n));
                 Set<String> stringSet = new HashSet<String>(tf.keySet());
@@ -50,14 +50,14 @@ public class AddItem extends AbstractRedisBolt {
                 jedisCommands.hincrBy("clusterNum",""+n,1);
             }
 
-            for(String s:tf.keySet()){
-                String temp = jedisCommands.hget("hotWord",s);
-                if(!("," + temp + ",").contains("," + n + ""))
-                    if(temp==null||temp.equals(""))
-                        jedisCommands.hset("hotWord",s,""+n);
-                    else
-                        jedisCommands.hset("hotWord",s,temp+","+n);
-            }
+//            for(String s:tf.keySet()){
+//                String temp = jedisCommands.hget("hotWord",s);
+//                if(!("," + temp + ",").contains("," + n + ""))
+//                    if(temp==null||temp.equals(""))
+//                        jedisCommands.hset("hotWord",s,""+n);
+//                    else
+//                        jedisCommands.hset("hotWord",s,temp+","+n);
+//            }
 //            jedisCommands.hset("pear" ,tuple.getIntegerByField("Id").toString(),""+n);
             this.collector.emit(new Values(tuple.getIntegerByField("Id"),n));
         } finally {

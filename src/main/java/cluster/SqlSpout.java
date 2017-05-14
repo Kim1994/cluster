@@ -38,8 +38,8 @@ public class SqlSpout extends BaseRichSpout {
             while (rs.next()) {
                 if(!(rs.getString(2).equals("")||rs.getString(2)==null))
                     this.collector.emit(new Values(rs.getInt(1),rs.getString(2)));
-                    Utils.waitForMillis(60);
-            }
+                    Utils.waitForMillis(40);
+            }Utils.waitForSeconds(100000);
         } catch (SQLException e) {
             e.printStackTrace();
         }

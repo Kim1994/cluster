@@ -25,19 +25,24 @@ public class HotWord  extends AbstractRedisBolt {
         JedisCommands jedisCommands = null;
         try {
             jedisCommands = getInstance();
-            long limit = jedisCommands.llen("cluster");
-            Set<Integer> classSet = new HashSet<Integer>();
+//            long limit = jedisCommands.llen("cluster");
+            Set<String> hwSet = new HashSet<String>();
             Map<String,Double> tf =  (Map<String, Double>) tuple.getValueByField("tf");
-            for(String s :tf.keySet()){
-                String csSet = jedisCommands.hget("hotWord" , s);
-                if(csSet==null||csSet.equals(""))
-                    continue;
-                String[] strings= csSet.split(",");
-                if(strings.length<50)
-                    for(String s1:strings)
-                        classSet.add(Integer.parseInt(s1));
+            for(String s :tf.keySet()) {
+                if (s.length() > 1 && s.length() < 5 || jedisCommands.sismember("hwSet", s)) {
+                    hwSet.add(s);
+                }
             }
-            this.collector.emit(new Values(tuple.getIntegerByField("Id"),tf,classSet.toString(),limit));
+//                    String csSet = jedisCommands.hget("hotWord", s);
+//                    if (csSet == null || csSet.equals(""))
+//                        continue;
+//                    String[] strings = csSet.split(",");
+//                    if (strings.length < 50)
+//                        for (String s1 : strings)
+//                            classSet.add(Integer.parseInt(s1));
+
+
+            this.collector.emit(new Values(tuple.getIntegerByField("Id"),tf,hwSet));
 
         } finally {
             if (jedisCommands != null) {
@@ -48,6 +53,6 @@ public class HotWord  extends AbstractRedisBolt {
     }
 
     public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
-        outputFieldsDeclarer.declare(new Fields("Id","tf","classList","limit"));
+        outputFieldsDeclarer.declare(new Fields("Id","tf","hwSet"));
     }
 }

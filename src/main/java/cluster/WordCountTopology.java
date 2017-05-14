@@ -14,16 +14,14 @@ public class WordCountTopology {
         TopologyBuilder builder = new TopologyBuilder();
 
         JedisPoolConfig poolConfig = new JedisPoolConfig.Builder()
-                .setHost("localhost").setPort(6379).build();
+                .setHost("192.168.56.101").setPort(6379).build();
 //        RedisStoreMapper storeMapper = new Idf2Redis();
 //        RedisStoreBolt storeBolt = new RedisStoreBolt(poolConfig, storeMapper) ;
 
         builder.setSpout("Spout", new SqlSpout());
-        // SentenceSpout --> SplitSentenceBolt
-        builder.setBolt("Split",new SplitSentenceBolt()).shuffleGrouping("Spout");
-        // SplitSentenceBolt --> WordCountBolt
+        builder.setBolt("Split",new SplitSentenceBolt(),3).shuffleGrouping("Spout");
         builder.setBolt("Tfidf", new Tfidf(poolConfig)).shuffleGrouping("Split");
-//        builder.setBolt("Idf2Redis",  new Idf2Redis(poolConfig)).shuffleGrouping("Split");
+//        builder.setBolt("Idf2Redis",  new Idf2Redis(poolConfig),3).shuffleGrouping("Split");
 //        builder.setBolt("Report",new ReportBolt()).shuffleGrouping("Tfidf");
         builder.setBolt("HotWord",new HotWord(poolConfig),2).shuffleGrouping("Tfidf");
         builder.setBolt("Classify", new Classify(poolConfig),4).shuffleGrouping("HotWord");

@@ -28,11 +28,12 @@ public class Idf2Redis extends AbstractRedisBolt {
             List<String> word = Arrays.asList(tuple.getStringByField("words").split(","));
             List<String> tempList = new ArrayList<String>(new HashSet<String>(word));
             for (String s:tempList) {
-                double wNum;
-                if(jedisCommands.hexists("word",s))
-                    wNum = Double.parseDouble(jedisCommands.hget("word",s));
-                else wNum = 0;
-                jedisCommands.hset("word",s,""+(sNum*wNum+1)/(sNum));
+//                double wNum;
+//                String tempString = jedisCommands.hget("word",s);
+//                if(tempString==null||tempString.equals(""))
+//                    wNum = 0;
+//                else wNum = Double.parseDouble(tempString);
+                jedisCommands.hincrBy("word",s,1);
             }
         } finally {
             if (jedisCommands != null) {
