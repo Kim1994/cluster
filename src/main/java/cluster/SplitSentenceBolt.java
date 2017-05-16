@@ -34,10 +34,8 @@ public class SplitSentenceBolt extends BaseRichBolt {
         String sentence = tuple.getStringByField("sentence").replaceAll("[^,.，。\\u4e00-\\u9fa5]", "");
         if(!(sentence == null ||sentence.equals(""))) {
             List<Word> words = WordSegmenter.seg(sentence);
-
-//            JiebaSegmenter segmenter = new JiebaSegmenter();
-            this.collector.emit(new Values(tuple.getIntegerByField("Id"), words.toString().replaceAll("[\\[\\]\\s]","")));
-
+            if(words.size()!=0)
+                this.collector.emit(new Values(tuple.getIntegerByField("Id"), words.toString().replaceAll("[\\[\\]\\s]","")));
         }
     }
 

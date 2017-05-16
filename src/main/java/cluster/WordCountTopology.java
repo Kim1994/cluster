@@ -29,7 +29,7 @@ public class WordCountTopology {
         builder.setBolt("SqlSave",new SqlSave()).shuffleGrouping("AddItem");
 
         Config config = new Config();
-//        config.setDebug(true);
+        config.setDebug(true);
 
         LocalCluster cluster = new LocalCluster();
 

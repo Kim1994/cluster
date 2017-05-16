@@ -40,7 +40,7 @@ public class Utils {
         Set<String> set = new HashSet<String>();
         set.addAll(aMap.keySet());
         set.retainAll(bMap.keySet());
-        if(set.size()<10)
+        if(set.size()<bMap.size()*0.15)
             return 0.0;
         double re = 0;
         for (String s:set) {

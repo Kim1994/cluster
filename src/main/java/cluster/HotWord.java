@@ -29,20 +29,12 @@ public class HotWord  extends AbstractRedisBolt {
             Set<String> hwSet = new HashSet<String>();
             Map<String,Double> tf =  (Map<String, Double>) tuple.getValueByField("tf");
             for(String s :tf.keySet()) {
-                if (s.length() > 1 && s.length() < 5 || jedisCommands.sismember("hwSet", s)) {
+                if (jedisCommands.sismember("hwSet", s)) {
                     hwSet.add(s);
                 }
             }
-//                    String csSet = jedisCommands.hget("hotWord", s);
-//                    if (csSet == null || csSet.equals(""))
-//                        continue;
-//                    String[] strings = csSet.split(",");
-//                    if (strings.length < 50)
-//                        for (String s1 : strings)
-//                            classSet.add(Integer.parseInt(s1));
-
-
-            this.collector.emit(new Values(tuple.getIntegerByField("Id"),tf,hwSet));
+            if(hwSet.size()!=0)
+                this.collector.emit(new Values(tuple.getIntegerByField("Id"),tf,hwSet));
 
         } finally {
             if (jedisCommands != null) {

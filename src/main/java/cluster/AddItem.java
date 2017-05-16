@@ -30,7 +30,7 @@ public class AddItem extends AbstractRedisBolt {
         try {
             jedisCommands = getInstance();
 //            jedisCommands.set("avg",""+(Integer.parseInt(jedisCommands.get("max"))/Integer.parseInt(jedisCommands.get("classify"))));
-
+            Set<String> hwSet = (Set<String>)tuple.getValueByField("hwSet");
             Map<String, Double> tf = (Map<String, Double>) tuple.getValueByField("tf");
             long n = tuple.getLongByField("classId");
             if(tuple.getIntegerByField("isNew")==0){
@@ -38,27 +38,21 @@ public class AddItem extends AbstractRedisBolt {
                 int len = Integer.parseInt(jedisCommands.hget("clusterNum",""+n));
                 Set<String> stringSet = new HashSet<String>(tf.keySet());
                 for(String s:stringSet){
+                    if(!hwSet.contains(s)&&(s.length()<2||s.length()>4)){
+                        avg.remove(s);
+                    }
                     if (avg.containsKey(s))
                         avg.put(s, ((len * avg.get(s) + tf.get(s)) / (len + 1)));
                     else avg.put(s, tf.get(s) / (len + 1));
-                    if(avg.get(s)<1E-3) {
+                    if(avg.get(s)<1.5E-3&&!hwSet.contains(s)) {
                         avg.remove(s);
-                        tf.remove(s);
                     }
                 }
                 jedisCommands.lset("cluster", n, avg.toString());
                 jedisCommands.hincrBy("clusterNum",""+n,1);
             }
 
-//            for(String s:tf.keySet()){
-//                String temp = jedisCommands.hget("hotWord",s);
-//                if(!("," + temp + ",").contains("," + n + ""))
-//                    if(temp==null||temp.equals(""))
-//                        jedisCommands.hset("hotWord",s,""+n);
-//                    else
-//                        jedisCommands.hset("hotWord",s,temp+","+n);
-//            }
-//            jedisCommands.hset("pear" ,tuple.getIntegerByField("Id").toString(),""+n);
+//
             this.collector.emit(new Values(tuple.getIntegerByField("Id"),n));
         } finally {
             if (jedisCommands != null) {

@@ -17,11 +17,13 @@ import java.sql.SQLException;
 import java.util.Map;
 
 import static utils.Utils.getConn;
+import static utils.Utils.waitForMillis;
 
 /**
  * Created by jinha on 2017/4/26.
  */
 public class SqlSpout extends BaseRichSpout {
+    int i=1;
     private SpoutOutputCollector collector;
     private Connection conn = null;
     public void open(Map map, TopologyContext topologyContext, SpoutOutputCollector spoutOutputCollector) {
@@ -30,20 +32,20 @@ public class SqlSpout extends BaseRichSpout {
     }
 
     public void nextTuple() {
-        String sql = "select articleid , article_content from cs_article_search";
+        String sql = "select articleid , article_content from cs_article_search WHERE articleid = "+i;
         PreparedStatement pstmt;
         try {
             pstmt = (PreparedStatement)conn.prepareStatement(sql);
             ResultSet rs = pstmt.executeQuery();
+            i++;
             while (rs.next()) {
                 if(!(rs.getString(2).equals("")||rs.getString(2)==null))
                     this.collector.emit(new Values(rs.getInt(1),rs.getString(2)));
-                    Utils.waitForMillis(40);
-            }Utils.waitForSeconds(100000);
+            }
+//            waitForMillis(100);
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
     }
 
     public void declareOutputFields(OutputFieldsDeclarer declarer) {

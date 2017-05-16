@@ -44,9 +44,9 @@ public class Classify extends AbstractRedisBolt{
             List<String> classSet = new ArrayList<String>();
             while (flag){
                 for(String s:hwMap.keySet()) {
-                    long len = jedisCommands.llen(s);
+                    long len = jedisCommands.scard(s);
                     if (len-1 > hwMap.get(s)) {
-                        List<String> tempList = jedisCommands.lrange(s, hwMap.get(s), len - 1);
+                        Set<String> tempList = jedisCommands.smembers(s);
                         for(String cString:tempList) {
                             if(!classSet.contains(cString)){
                                 classSet.add(cString);
@@ -69,50 +69,10 @@ public class Classify extends AbstractRedisBolt{
                 jedisCommands.hset("clusterNum",""+minClass,"1");
                 isNew = 1;
             }
-            for(String s:hwMap.keySet())
-                jedisCommands.rpush(s,""+minClass);
-            this.collector.emit(new Values(tuple.getIntegerByField("Id"),tf,minClass,isNew));
-
-//
-//            String classList = tuple.getStringByField("classList").replaceAll("[\\[\\]\\s]","");
-//            if(!(classList==null||classList.equals(""))){
-//                String[] tempCList = classList.split(",");
-//                for (String s:tempCList){
-//                    count++;
-//                    double dis = getCosDistance(tf, JSONObject.fromObject(jedisCommands.lindex("cluster",Long.parseLong(s))));
-//                    if(dis>0.3&&dis>min)
-//                        minClass = Long.parseLong(s);
-//                }
-//            }
-//
-//            Map<String,Double> temp;
-//            Random random = new Random();
-//            int time = 30;
-//            for(long i = tuple.getLongByField("limit") ;;i++){
-//                temp = JSONObject.fromObject(jedisCommands.lindex("cluster",i));
-//                if(temp.size()==0){
-//                    if(time < 15)
-//                        break;
-//                    else {
-//                        waitForMillis(time /= 2);
-//                        i--;
-//                        continue;
-//                    }
-//                }
-//                count++;
-//                double dis = getCosDistance(tf,temp);
-//                if(dis>0.3&&dis>min)
-//                    minClass = i;
-//            }
-//            int isNew = 0;
-//            if(minClass == -1){
-//                minClass = jedisCommands.rpush("cluster",tf.toString())-1;
-//                jedisCommands.hset("clusterNum",""+minClass,"1");
-//                isNew = 1;
-//            }
-//
-//            jedisCommands.incrBy("max",count);
-//            this.collector.emit(new Values(tuple.getIntegerByField("Id"),tf,minClass,isNew));
+            for(String s:hwMap.keySet()) {
+                jedisCommands.sadd(s,""+minClass);
+            }
+            this.collector.emit(new Values(tuple.getIntegerByField("Id"),tf,minClass,isNew,tuple.getValueByField("hwSet")));
 
         } finally {
             if (jedisCommands != null) {
@@ -124,6 +84,6 @@ public class Classify extends AbstractRedisBolt{
 
 
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
-        declarer.declare(new Fields("Id","tf","classId","isNew"));
+        declarer.declare(new Fields("Id","tf","classId","isNew","hwSet"));
     }
 }
